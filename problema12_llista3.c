@@ -13,6 +13,8 @@ Codi per al problema 26 de la llista 1 de Mètodes Numèrics II
 
 
 double grad_result[2];
+double newton_actual[2];
+double newton_anterior[2];
 double tol;
 
 
@@ -116,12 +118,40 @@ double find_solution()
     return y;
 }
 
+// No funciona, preguntar dimarts
+double* newton_method(double x, double y)
+{
+    double* grad;
+    newton_anterior[0] = x;
+    newton_anterior[1] = y;
+    grad = grad_f(newton_anterior[0], newton_anterior[1]);
+    newton_actual[0] = newton_anterior[0] - grad[0]*f(newton_anterior[0], newton_anterior[1]);
+    newton_actual[1] = newton_anterior[1] - grad[1]*f(newton_anterior[0], newton_anterior[1]);
+    while (f(newton_actual[0], newton_actual[1]) > pow(10.,-12)){
+        newton_actual[0] = newton_anterior[0];
+        newton_actual[1] = newton_anterior[1];
+        grad = grad_f(newton_anterior[0], newton_anterior[1]);
+        newton_actual[0] = newton_anterior[0] - grad[0]*f(newton_anterior[0], newton_anterior[1]);
+        newton_actual[1] = newton_anterior[1] - grad[1]*f(newton_anterior[0], newton_anterior[1]);
+    }
+    printf("%.12f\n", newton_actual[0]);
+    printf("%.12f\n", newton_actual[1]);
+    return newton_actual;
+}
+
+
 int main()
 {
     // Trobem un punt de la funció
     double x = 0;
     double y;
+    double* solucio;
     y = find_solution();
     printf("Un punt de la corba és: (0,%f)\n", y);
+
+    solucio = newton_method(x, y);
+    printf("%.12f\n", solucio[0]);
+    printf("%.12f\n", solucio[1]);
+
 }
 
