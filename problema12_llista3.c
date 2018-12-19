@@ -58,7 +58,7 @@ double* grad_f(double x, double y)
 {
     grad_result[0] = 4*pow(x, 3.0);
 
-    grad_result[0] += 6.0*pow(x,32.0)*y;
+    grad_result[0] += 6.0*pow(x,2.0)*y;
 
     grad_result[0] += 6.0*x*pow(y,2.0);
 
