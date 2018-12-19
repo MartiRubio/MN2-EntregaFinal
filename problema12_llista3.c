@@ -14,6 +14,7 @@ Codi per al problema 26 de la llista 1 de Mètodes Numèrics II
 
 double grad_result[2];
 double start[2];
+double jacobian[2][2];
 double newton_actual[2];
 double newton_anterior[2];
 double tol;
@@ -139,6 +140,15 @@ double* get_first_guess(double* solution, double h)
     printf("origin:(%.12f,%.12f)\n", solution[0], solution[1]);
     printf("start:(%.12f,%.12f)\n", start[0], start[1]);
     return start;
+}
+
+double** jacobian(double* point)
+{
+    double* grad_value;
+    grad_value = grad_f(point[0], point[1]);
+    jacobian[0][0] = grad_value[0];
+    jacobian[0][1] = grad_value[1];
+    jacobian[0][1]
 }
 
 
