@@ -13,6 +13,7 @@ Codi per al problema 26 de la llista 1 de Mètodes Numèrics II
 
 
 double grad_result[2];
+double start[2];
 double newton_actual[2];
 double newton_anterior[2];
 double tol;
@@ -118,15 +119,44 @@ double find_solution()
     return y;
 }
 
-// No funciona, preguntar dimarts
-double* newton_method(double x, double y)
+double norma(double* vector)
+{
+    double result;
+    result = pow(vector[0], 2.0) + pow(vector[1], 2.0);
+    result = sqrt(result);
+
+    return result;
+}
+
+double* get_first_guess(double* solution, double h)
+{
+    double* vector;
+    vector = grad_f(solution[0], solution[1]);
+    vector[0] = h*vector[0]/norma(vector);
+    vector[1] = h*vector[1]/norma(vector);
+    start[0] = newton_anterior[0] + vector[0];
+    start[1] = newton_anterior[1] + vector[1];
+    printf("origin:(%.12f,%.12f)\n", solution[0], solution[1]);
+    printf("start:(%.12f,%.12f)\n", start[0], start[1]);
+    return start;
+}
+
+
+double* newton_method(double x, double y, double h)
 {
     double* grad;
+    double* first_guess;
     newton_anterior[0] = x;
     newton_anterior[1] = y;
+    first_guess = get_first_guess(newton_anterior, h);
+    newton_anterior[0] = first_guess[0];
+    newton_anterior[1] = first_guess[1];
+
+    // En aquest punt ja tenim l'initial guess, cal calcular la matriu inversa del jacobià (veure foto) i aplicar el mètode
+    // És a dir, només falta crear la funció jacobià.
     grad = grad_f(newton_anterior[0], newton_anterior[1]);
-    newton_actual[0] = newton_anterior[0] - grad[0]*f(newton_anterior[0], newton_anterior[1]);
-    newton_actual[1] = newton_anterior[1] - grad[1]*f(newton_anterior[0], newton_anterior[1]);
+    newton_actual[0] = first_guess[0] - grad[0]*f(first_guess[0], first_guess[1]);
+    newton_actual[1] = first_guess[1] - grad[1]*f(newton_anterior[0], newton_anterior[1]);
     while (f(newton_actual[0], newton_actual[1]) > pow(10.,-12)){
         newton_actual[0] = newton_anterior[0];
         newton_actual[1] = newton_anterior[1];
@@ -134,10 +164,10 @@ double* newton_method(double x, double y)
         newton_actual[0] = newton_anterior[0] - grad[0]*f(newton_anterior[0], newton_anterior[1]);
         newton_actual[1] = newton_anterior[1] - grad[1]*f(newton_anterior[0], newton_anterior[1]);
     }
-    printf("%.12f\n", newton_actual[0]);
-    printf("%.12f\n", newton_actual[1]);
     return newton_actual;
 }
+
+
 
 
 int main()
@@ -145,11 +175,12 @@ int main()
     // Trobem un punt de la funció
     double x = 0;
     double y;
+    double h = 0.01;
     double* solucio;
     y = find_solution();
     printf("Un punt de la corba és: (0,%f)\n", y);
 
-    solucio = newton_method(x, y);
+    solucio = newton_method(x, y, h);
     printf("%.12f\n", solucio[0]);
     printf("%.12f\n", solucio[1]);
 
