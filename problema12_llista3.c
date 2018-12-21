@@ -117,7 +117,7 @@ double* grad_g(double x, double y, double x0, double y0)
 {
     grad_result_g[0] = 2.0*(x - x0);
 
-    grad_result_g[1] = 2.0*(y - y);
+    grad_result_g[1] = 2.0*(y - y0);
 
     return grad_result_g;
 }
@@ -154,8 +154,9 @@ double* get_first_guess(double* solution, double h)
 {
     double* vector;
     vector = grad_f(solution[0], solution[1]);
-    vector[0] = h*vector[0]/norma(vector);
-    vector[1] = h*vector[1]/norma(vector);
+    double norm = norma(vector);
+    vector[0] = h*vector[0]/norm;
+    vector[1] = h*vector[1]/norm;
     start[0] = newton_anterior[0] + vector[0];
     start[1] = newton_anterior[1] + vector[1];
     printf("origin:(%.12f,%.12f)\n", solution[0], solution[1]);
@@ -164,7 +165,7 @@ double* get_first_guess(double* solution, double h)
     return start;
 }
 
-double** inverse_jacobian(double x, double y, double x0, double y0)
+void inverse_jacobian(double x, double y, double x0, double y0)
 {
     double* gradf;
     double* gradg;
@@ -174,9 +175,7 @@ double** inverse_jacobian(double x, double y, double x0, double y0)
     jacobian[0][0] = gradg[1]*det;
     jacobian[0][1] = -gradf[1]*det;
     jacobian[1][0] = -gradg[0]*det;
-    jacobian[1][1] = gradf[1]*det;
-
-    return jacobian;
+    jacobian[1][1] = gradf[0]*det;
 }
 
 double* newton_method(double x, double y, double h)
@@ -192,27 +191,23 @@ double* newton_method(double x, double y, double h)
     newton_anterior[0] = fg[0];
     newton_anterior[1] = fg[1];
 
-    ccc = inverse_jacobian(newton_anterior[0], newton_anterior[1], x, y);
-
-    jacobian_calculation[0][0] = ccc[0][0];
-    jacobian_calculation[0][1] = ccc[0][1];
-    jacobian_calculation[1][0] = ccc[1][0];
-    jacobian_calculation[1][1] = ccc[1][1];
+    inverse_jacobian(newton_anterior[0], newton_anterior[1], x, y);
 
     f_calc = f(newton_anterior[0], newton_anterior[1]);
     g_calc = g(newton_anterior[0], newton_anterior[1], x, y, h);
-
-    newton_actual[0] = newton_anterior[0] - jacobian_calculation[0][0]*f_calc - jacobian_calculation[0][1]*g_calc;
-    newton_actual[1] = newton_anterior[1] - jacobian_calculation[1][0]*f_calc - jacobian_calculation[1][1]*g_calc;
-    printf("1\n");
-    printf("%.12f\n", newton_actual[0]);
-    printf("%.12f\n", newton_actual[1]);
-    printf("2\n");
-    while (f(newton_actual[0], newton_actual[1]) > pow(10.,-12.)){
+    int i = 0;
+    newton_actual[0] = newton_anterior[0] - jacobian[0][0]*f_calc - jacobian[0][1]*g_calc;
+    newton_actual[1] = newton_anterior[1] - jacobian[1][0]*f_calc - jacobian[1][1]*g_calc;
+    while (fabs(f(newton_actual[0], newton_actual[1])) > pow(10.,-10.)){
+        i++;
+        printf("%.12f\n", fabs(f(newton_actual[0], newton_actual[1])));
         newton_anterior[0] = newton_actual[0];
         newton_anterior[1] = newton_actual[1];
-        newton_actual[0] = newton_anterior[0] - jacobian_calculation[0][0]*gradf[0] - jacobian_calculation[0][1]*gradf[1];
-        newton_actual[1] = newton_anterior[1] - jacobian_calculation[1][0]*gradf[0] - jacobian_calculation[1][1]*gradf[1];
+        inverse_jacobian(newton_anterior[0], newton_anterior[1], x, y);
+        f_calc = f(newton_anterior[0], newton_anterior[1]);
+        g_calc = g(newton_anterior[0], newton_anterior[1], x, y, h);
+        newton_actual[0] = newton_anterior[0] - jacobian[0][0]*f_calc - jacobian[0][1]*g_calc;
+        newton_actual[1] = newton_anterior[1] - jacobian[1][0]*f_calc - jacobian[1][1]*g_calc;
     }
     return newton_actual;
 }
