@@ -12,9 +12,11 @@ Codi per al problema 26 de la llista 1 de Mètodes Numèrics II
 #include <time.h>
 
 
+double grad_result_g[2];
 double grad_result[2];
 double start[2];
 double jacobian[2][2];
+double jacobian_calculation[2][2];
 double newton_actual[2];
 double newton_anterior[2];
 double tol;
@@ -101,6 +103,25 @@ double* grad_f(double x, double y)
     return grad_result;
 }
 
+double g(double x, double y, double x0, double y0, double h)
+{
+    x = (x - x0);
+    y = (y - y0);
+
+    double result = pow(x,2.) + pow(y,2.) - pow(h, 2.);
+    return result;
+}
+
+
+double* grad_g(double x, double y, double x0, double y0)
+{
+    grad_result_g[0] = 2.0*(x - x0);
+
+    grad_result_g[1] = 2.0*(y - y);
+
+    return grad_result_g;
+}
+
 double find_solution()
 {
     tol = pow(10.0, -12.0);
@@ -139,46 +160,62 @@ double* get_first_guess(double* solution, double h)
     start[1] = newton_anterior[1] + vector[1];
     printf("origin:(%.12f,%.12f)\n", solution[0], solution[1]);
     printf("start:(%.12f,%.12f)\n", start[0], start[1]);
+
     return start;
 }
 
-double** jacobian(double* point)
+double** inverse_jacobian(double x, double y, double x0, double y0)
 {
-    double* grad_value;
-    grad_value = grad_f(point[0], point[1]);
-    jacobian[0][0] = grad_value[0];
-    jacobian[0][1] = grad_value[1];
-    jacobian[0][1]
-}
+    double* gradf;
+    double* gradg;
+    gradf = grad_f(x, y);
+    gradg = grad_g(x, y, x0, y0);
+    double det = 1./(gradf[0]*gradg[1] - gradf[1]*gradg[0]);
+    jacobian[0][0] = gradg[1]*det;
+    jacobian[0][1] = -gradf[1]*det;
+    jacobian[1][0] = -gradg[0]*det;
+    jacobian[1][1] = gradf[1]*det;
 
+    return jacobian;
+}
 
 double* newton_method(double x, double y, double h)
 {
-    double* grad;
-    double* first_guess;
+    double* fg;
+    double* gradf;
+    double* gradg;
+    double f_calc, g_calc;
+    double** ccc;
     newton_anterior[0] = x;
     newton_anterior[1] = y;
-    first_guess = get_first_guess(newton_anterior, h);
-    newton_anterior[0] = first_guess[0];
-    newton_anterior[1] = first_guess[1];
+    fg = get_first_guess(newton_anterior,h);
+    newton_anterior[0] = fg[0];
+    newton_anterior[1] = fg[1];
 
-    // En aquest punt ja tenim l'initial guess, cal calcular la matriu inversa del jacobià (veure foto) i aplicar el mètode
-    // És a dir, només falta crear la funció jacobià.
-    grad = grad_f(newton_anterior[0], newton_anterior[1]);
-    newton_actual[0] = first_guess[0] - grad[0]*f(first_guess[0], first_guess[1]);
-    newton_actual[1] = first_guess[1] - grad[1]*f(newton_anterior[0], newton_anterior[1]);
-    while (f(newton_actual[0], newton_actual[1]) > pow(10.,-12)){
-        newton_actual[0] = newton_anterior[0];
-        newton_actual[1] = newton_anterior[1];
-        grad = grad_f(newton_anterior[0], newton_anterior[1]);
-        newton_actual[0] = newton_anterior[0] - grad[0]*f(newton_anterior[0], newton_anterior[1]);
-        newton_actual[1] = newton_anterior[1] - grad[1]*f(newton_anterior[0], newton_anterior[1]);
+    ccc = inverse_jacobian(newton_anterior[0], newton_anterior[1], x, y);
+
+    jacobian_calculation[0][0] = ccc[0][0];
+    jacobian_calculation[0][1] = ccc[0][1];
+    jacobian_calculation[1][0] = ccc[1][0];
+    jacobian_calculation[1][1] = ccc[1][1];
+
+    f_calc = f(newton_anterior[0], newton_anterior[1]);
+    g_calc = g(newton_anterior[0], newton_anterior[1], x, y, h);
+
+    newton_actual[0] = newton_anterior[0] - jacobian_calculation[0][0]*f_calc - jacobian_calculation[0][1]*g_calc;
+    newton_actual[1] = newton_anterior[1] - jacobian_calculation[1][0]*f_calc - jacobian_calculation[1][1]*g_calc;
+    printf("1\n");
+    printf("%.12f\n", newton_actual[0]);
+    printf("%.12f\n", newton_actual[1]);
+    printf("2\n");
+    while (f(newton_actual[0], newton_actual[1]) > pow(10.,-12.)){
+        newton_anterior[0] = newton_actual[0];
+        newton_anterior[1] = newton_actual[1];
+        newton_actual[0] = newton_anterior[0] - jacobian_calculation[0][0]*gradf[0] - jacobian_calculation[0][1]*gradf[1];
+        newton_actual[1] = newton_anterior[1] - jacobian_calculation[1][0]*gradf[0] - jacobian_calculation[1][1]*gradf[1];
     }
     return newton_actual;
 }
-
-
-
 
 int main()
 {
