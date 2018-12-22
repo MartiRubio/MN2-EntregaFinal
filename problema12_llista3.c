@@ -80,7 +80,7 @@ double* grad_f(double x, double y)
 
     grad_result[0] += 20.8;
 
-    grad_result[1] += 2.0*pow(x,3.0);
+    grad_result[1] = 2.0*pow(x,3.0);
 
     grad_result[1] += 6.0*pow(x,2.0)*y;
 
@@ -155,12 +155,12 @@ double* get_first_guess(double* solution, double h)
     double* vector;
     vector = grad_f(solution[0], solution[1]);
     double norm = norma(vector);
-    vector[0] = h*vector[0]/norm;
-    vector[1] = h*vector[1]/norm;
+    vector[0] = -h*vector[1]/norm;
+    vector[1] = h*vector[0]/norm;
     start[0] = newton_anterior[0] + vector[0];
     start[1] = newton_anterior[1] + vector[1];
-    printf("origin:(%.12f,%.12f)\n", solution[0], solution[1]);
-    printf("start:(%.12f,%.12f)\n", start[0], start[1]);
+    //printf("origin:(%.12f,%.12f)\n", solution[0], solution[1]);
+    //printf("start:(%.12f,%.12f)\n", vector[0], vector[1]);
 
     return start;
 }
@@ -200,7 +200,7 @@ double* newton_method(double x, double y, double h)
     newton_actual[1] = newton_anterior[1] - jacobian[1][0]*f_calc - jacobian[1][1]*g_calc;
     while (fabs(f(newton_actual[0], newton_actual[1])) > pow(10.,-10.)){
         i++;
-        printf("%.12f\n", fabs(f(newton_actual[0], newton_actual[1])));
+        // printf("%.12f\n", fabs(f(newton_actual[0], newton_actual[1])));
         newton_anterior[0] = newton_actual[0];
         newton_anterior[1] = newton_actual[1];
         inverse_jacobian(newton_anterior[0], newton_anterior[1], x, y);
@@ -209,6 +209,7 @@ double* newton_method(double x, double y, double h)
         newton_actual[0] = newton_anterior[0] - jacobian[0][0]*f_calc - jacobian[0][1]*g_calc;
         newton_actual[1] = newton_anterior[1] - jacobian[1][0]*f_calc - jacobian[1][1]*g_calc;
     }
+    //printf("%d\n", i);
     return newton_actual;
 }
 
@@ -219,12 +220,25 @@ int main()
     double y;
     double h = 0.01;
     double* solucio;
+    FILE *fp;
+
     y = find_solution();
     printf("Un punt de la corba és: (0,%f)\n", y);
 
     solucio = newton_method(x, y, h);
-    printf("%.12f\n", solucio[0]);
-    printf("%.12f\n", solucio[1]);
+    // printf("%.12f\n", solucio[0]);
+    // printf("%.12f\n", solucio[1]);
+    fp = fopen("./test.txt", "w+");
+    for(int i = 0; i < 10; i++){
+        fprintf(fp, "%.12f, %.12f \n", solucio[0], solucio[1]);
+        solucio = newton_method(solucio[0], solucio[1], h);
+    }
+    fclose(fp);
 
+
+    FILE *pipe_gp = popen("gnuplot -p", "w");
+    fputs("plot  './test.txt' u 0:1 '\n", pipe_gp);
+    pclose(pipe_gp);
+    return 0;
 }
 
