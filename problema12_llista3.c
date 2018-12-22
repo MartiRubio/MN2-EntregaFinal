@@ -10,9 +10,11 @@ Codi per al problema 26 de la llista 1 de Mètodes Numèrics II
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 
 
 double grad_result_g[2];
+int iter;
 double grad_result[2];
 double start[2];
 double jacobian[2][2];
@@ -155,10 +157,11 @@ double* get_first_guess(double* solution, double h)
     double* vector;
     vector = grad_f(solution[0], solution[1]);
     double norm = norma(vector);
-    vector[0] = -h*vector[1]/norm;
-    vector[1] = h*vector[0]/norm;
-    start[0] = newton_anterior[0] + vector[0];
-    start[1] = newton_anterior[1] + vector[1];
+    double v = vector[0];
+    vector[0] = h*vector[1]/norm;
+    vector[1] = -h*v/norm;
+    start[0] = solution[0] + vector[0];
+    start[1] = solution[1] + vector[1];
     //printf("origin:(%.12f,%.12f)\n", solution[0], solution[1]);
     //printf("start:(%.12f,%.12f)\n", vector[0], vector[1]);
 
@@ -199,17 +202,25 @@ double* newton_method(double x, double y, double h)
     newton_actual[0] = newton_anterior[0] - jacobian[0][0]*f_calc - jacobian[0][1]*g_calc;
     newton_actual[1] = newton_anterior[1] - jacobian[1][0]*f_calc - jacobian[1][1]*g_calc;
     while (fabs(f(newton_actual[0], newton_actual[1])) > pow(10.,-10.)){
+        if (iter == 296000){
+            printf("%.12f, %.12f\n", jacobian[0][0], jacobian[0][1]);
+            printf("%.12f, %.12f\n", jacobian[1][0], jacobian[1][1]);
+            sleep(1);
+            printf("p = (%.12f, %.12f)\n", newton_actual[0], newton_actual[1]);
+            sleep(1);
+        }
         i++;
-        // printf("%.12f\n", fabs(f(newton_actual[0], newton_actual[1])));
+        //printf("%.12f\n", fabs(f(newton_actual[0], newton_actual[1])));
         newton_anterior[0] = newton_actual[0];
         newton_anterior[1] = newton_actual[1];
+
         inverse_jacobian(newton_anterior[0], newton_anterior[1], x, y);
         f_calc = f(newton_anterior[0], newton_anterior[1]);
         g_calc = g(newton_anterior[0], newton_anterior[1], x, y, h);
         newton_actual[0] = newton_anterior[0] - jacobian[0][0]*f_calc - jacobian[0][1]*g_calc;
         newton_actual[1] = newton_anterior[1] - jacobian[1][0]*f_calc - jacobian[1][1]*g_calc;
     }
-    //printf("%d\n", i);
+    // printf("%d\n", i);
     return newton_actual;
 }
 
@@ -229,7 +240,9 @@ int main()
     // printf("%.12f\n", solucio[0]);
     // printf("%.12f\n", solucio[1]);
     fp = fopen("./test.txt", "w+");
-    for(int i = 0; i < 10; i++){
+    for(int i = 0; i < 2570; i++){
+        iter = i;
+        //printf("%d\n", iter);
         fprintf(fp, "%.12f, %.12f \n", solucio[0], solucio[1]);
         solucio = newton_method(solucio[0], solucio[1], h);
     }
@@ -237,7 +250,7 @@ int main()
 
 
     FILE *pipe_gp = popen("gnuplot -p", "w");
-    fputs("plot  './test.txt' u 0:1 '\n", pipe_gp);
+    fputs("plot './test.txt'\n", pipe_gp);
     pclose(pipe_gp);
     return 0;
 }
