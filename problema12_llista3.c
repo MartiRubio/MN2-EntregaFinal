@@ -1,8 +1,8 @@
 // Author: Martí Rubio
-// Codi @ https://github.com/MartiRubio/MN2-EntregaParcial
+// Codi @ https://github.com/MartiRubio/MN2-EntregaFinal
 
 /*
-Codi per al problema 26 de la llista 1 de Mètodes Numèrics II
+Codi per al problema 12 de la llista 3 de Mètodes Numèrics II
 */
 
 // Includes necessaris
@@ -12,7 +12,7 @@ Codi per al problema 26 de la llista 1 de Mètodes Numèrics II
 #include <time.h>
 #include <unistd.h>
 
-
+// Variables globals
 double grad_result_g[2];
 int iter;
 double grad_result[2];
@@ -24,6 +24,7 @@ double newton_anterior[2];
 double tol;
 
 
+// Càlcul de f
 double f(double x, double y)
 {
     double result = pow(x, 4.0);
@@ -60,6 +61,7 @@ double f(double x, double y)
 }
 
 
+// Càlcul del gradient de f
 double* grad_f(double x, double y)
 {
     grad_result[0] = 4*pow(x, 3.0);
@@ -105,6 +107,8 @@ double* grad_f(double x, double y)
     return grad_result;
 }
 
+
+// Càlcul de g
 double g(double x, double y, double x0, double y0, double h)
 {
     x = (x - x0);
@@ -115,6 +119,7 @@ double g(double x, double y, double x0, double y0, double h)
 }
 
 
+// Càlcul del gradient de g
 double* grad_g(double x, double y, double x0, double y0)
 {
     grad_result_g[0] = 2.0*(x - x0);
@@ -124,6 +129,8 @@ double* grad_g(double x, double y, double x0, double y0)
     return grad_result_g;
 }
 
+
+// Càlcul de la solució inicial amb x=0
 double find_solution()
 {
     tol = pow(10.0, -12.0);
@@ -143,6 +150,8 @@ double find_solution()
     return y;
 }
 
+
+// Càlcul de la norma d'un vector
 double norma(double* vector)
 {
     double result;
@@ -152,6 +161,8 @@ double norma(double* vector)
     return result;
 }
 
+
+// Funció per a trobar un first guess que funcioni
 double* get_first_guess(double* solution, double h)
 {
     double* vector;
@@ -162,12 +173,12 @@ double* get_first_guess(double* solution, double h)
     vector[1] = -h*v/norm;
     start[0] = solution[0] + vector[0];
     start[1] = solution[1] + vector[1];
-    //printf("origin:(%.12f,%.12f)\n", solution[0], solution[1]);
-    //printf("start:(%.12f,%.12f)\n", vector[0], vector[1]);
 
     return start;
 }
 
+
+// Càlcul de la matriu jacobiana inversa
 void inverse_jacobian(double x, double y, double x0, double y0)
 {
     double* gradf;
@@ -181,6 +192,8 @@ void inverse_jacobian(double x, double y, double x0, double y0)
     jacobian[1][1] = gradf[0]*det;
 }
 
+
+// Mètode de Newton
 double* newton_method(double x, double y, double h)
 {
     double* fg;
@@ -224,6 +237,11 @@ double* newton_method(double x, double y, double h)
     return newton_actual;
 }
 
+
+// Main:
+//       crida a trobar un punt de la corba amb x=0
+//       crida al mètode de Newton 2571 vegades (amb això ja dóna una volta completa)
+//       crida a gnuplot per a dibuixar els punts
 int main()
 {
     // Trobem un punt de la funció
